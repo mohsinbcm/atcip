@@ -1,0 +1,61 @@
+{% import "bootstrap/wtf.html" as wtf %}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ATCIP: hackathon</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="/static/assets/css/newmain.css">
+	<noscript><link rel="stylesheet" href="/static/assets/css/noscript.css" /></noscript>
+	<!-- Custom styles for this template -->
+</head>
+<body class="text-center">
+	<div id="wrapper">
+		<header id="header" class="alt">
+			<span class="logo"><img src="/static/assets/images/logo.svg" alt="ATCIP"></span>
+			<h1>ATCIP</h1>
+			<p>Automated and Timely Contract Insurance Payout</br>
+			<small>Developed for <i>ICERTIS AI/ML & Blockchain hackathon</i> by Techgig</small></p>
+		</header>
+		{%if not error%}
+			{%if not verified%}
+			<p class="mb-3 font-weight-lighter">Email verification successful please login</p>
+			{%else%}
+			<p class="mb-3 font-weight-lighter">Email already verified please login</p>
+			{%endif%}
+			<div class="form-signin">
+				<div class="next">
+					<a href="/" class="btn btn-default btn-lg btn btn-light btn-block" role="button">Sign in</a>
+				</div>	
+			</div>
+		{%else%}
+			<p class="mb-3 text-danger h5 bg-light">{{error}}{{email}}</p>
+			{%if email%}
+			<form class="m-auto text-center w-50"  method="POST" action="/confirm_email/resendemail">
+				{{ form.hidden_tag() }}
+				<label for="inputEmail" class="sr-only">Email address</label>
+				<input name="email" type="hidden" id="inputEmail" value="{{token}}">
+				<div class="row">
+					<div class="mr-2">
+						<button type="submit" class="btn btn-default btn-lg btn-primary btn-block">Resend email</button>
+					</div>
+					<div class="m-0 pb-1 pt-1">
+						<p>{{email[0]+'****'+email[email.index('@')-1:]}}</p>
+					</div>
+				</div>
+			</form>
+			{%else%}
+			<form class="m-auto text-center w-50">
+				<div class="row">
+					<div class="m-auto">
+						<a href="/signup" class="btn btn-default btn-lg btn btn-light btn-block" role="button">Sign up</a>
+					</div>	
+				</div>
+			</form>
+			{%endif%}
+		{%endif%}
+			<p class="mt-5 mb-3 text-muted">&copy; Team_Geek, 2019-2020</p>
+	</div>
+</body>
+</html>
