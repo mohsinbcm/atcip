@@ -12,10 +12,13 @@ from werkzeug import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from sqlalchemy import func
+from urllib.parse import quote, quote_plus
+from base64 import b64encode
 
+params = quote_plus("DRIVER={SQL Server};SERVER=db-5zlghd-stc.database.windows.net;DATABASE=atcip-web-db;UID=dbadmin;PWD=Atcip@112019;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect={}".format(params)
 s = URLSafeTimedSerializer('Thisisasecret!')
 
 bootstrap = Bootstrap(app)
@@ -192,7 +195,8 @@ def dashboard():
         form.image.data.save('uploads/' + filename)
         return render_template('dashboard.html', name=current_user.email, data=open('uploads/' + filename, 'rb').read())
     else:
-        return render_template('dashboard.html', name=current_user.email, form=form)
+        image = b64encode(open('uploads\\c.jpg', 'rb').read()).decode('ascii')
+        return render_template('dashboard.html', name=current_user.email, form=form, data=quote(image))
 
 
 if __name__ == "__main__":

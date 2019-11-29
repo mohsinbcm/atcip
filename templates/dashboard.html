@@ -10,29 +10,41 @@
 	<noscript><link rel="stylesheet" href="/static/assets/css/noscript.css" /></noscript>
 	<!-- Custom styles for this template -->
 </head>
-<body class="text-center">
-	<div id="wrapper">
-		<header id="header" class="alt">
-			<span class="logo"><img src="/static/assets/images/logo.svg" alt="ATCIP"></span>
-			<h1>ATCIP</h1>
-			<p>Automated and Timely Contract Insurance Payout</br>
-			<small>Developed for <i>ICERTIS AI/ML & Blockchain hackathon</i> by Techgig</small></p>
-		</header>
-		<div class="text-center">
-			<div class="next">
-				<p class="mb-3 font-weight-lighter">Welcome, {{name}}</p>
-			</div>	
+<body>
+	<nav class="navbar navbar-expand">
+		<div class="container-fluid">
+			<a class="font-weight-bold navbar-brand text-light" href="/dashboard">ATCIP</a>
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="/logout" class="btn btn-danger"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+			</ul>
 		</div>
-		{%if not data%}
-		<form class="form-signin" enctype="multipart/form-data" method="POST" action="/dashboard">
-			{{form.hidden_tag()}}
-			{{ form.image(class="btn btn-default btn-lg btn btn-light btn-block",accept="image/*",capture="user") }}
-			<button type="submit" class="btn btn-default btn-lg btn-primary btn-block">Upload!</button>		
-		</form>
+	</nav>
+	<div class="container text-center">
+		<div id="wrapper">
+			<header id="header" class="alt">
+				<span class="logo"><img src="/static/assets/images/logo.svg" alt="ATCIP"></span>
+				<h1>ATCIP</h1>
+				<p>
+					Automated and Timely Contract Insurance Payout</br>
+					<small>Developed for <i>ICERTIS AI/ML & Blockchain hackathon</i> by Techgig</small>
+				</p>
+			</header>
+			<div class="text-center">
+				<div class="next">
+					<p class="mb-3 font-weight-lighter">Welcome, {{name}}</p>
+				</div>	
+			</div>
+			{%if not data%}
+			<form class="form-signin" enctype="multipart/form-data" method="POST" action="/dashboard">
+				{{form.hidden_tag()}}
+				{{form.image(class="btn btn-default btn-lg btn btn-light btn-block",accept="image/*",capture="user") }}
+				<button type="submit" class="btn btn-default btn-lg btn-primary btn-block">Upload!</button>		
+			</form>
+			{%else%}
+			<img src="data:image/jpg;base64, {{data}}" alt="alternate" class="d-block img-thumbnail m-auto" style="width:200px;height:300px"/>
+			{%endif%}
 			<p class="mt-5 mb-3 text-muted">&copy; Team_Geek, 2019-2020</p>
-		{%else%}
-			<img src="data:image/jpg;base64, {{data}}" alt="alternate" />.
-		{%endif%}
+		</div>
 	</div>
 </body>
 </html>
