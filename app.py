@@ -15,7 +15,7 @@ from sqlalchemy import func
 from urllib.parse import quote, quote_plus
 from base64 import b64encode
 
-params = quote_plus("DRIVER={ODBC Driver 13 for SQL Server};SERVER=db-5zlghd-stc.database.windows.net;DATABASE=atcip-web-db;UID=dbadmin;PWD=Atcip@112019;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+params = quote_plus("DRIVER={ODBC Driver 17 for SQL Server};SERVER=db-5zlghd-stc.database.windows.net;DATABASE=atcip-web-db;UID=dbadmin;PWD=Atcip@112019;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect={}".format(params)
