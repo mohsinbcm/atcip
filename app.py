@@ -14,6 +14,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from sqlalchemy import func
 from urllib.parse import quote, quote_plus
 from base64 import b64encode
+import os
 
 params = quote_plus("DRIVER={ODBC Driver 17 for SQL Server};SERVER=db-5zlghd-stc.database.windows.net;DATABASE=atcip-web-db;UID=dbadmin;PWD=Atcip@112019;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
 app = Flask(__name__)
@@ -195,7 +196,7 @@ def dashboard():
         form.image.data.save('uploads/' + filename)
         return render_template('dashboard.html', name=current_user.email, data=open('uploads/' + filename, 'rb').read())
     else:
-        image = b64encode(open('uploads\\c.jpg', 'rb').read()).decode('ascii')
+        image = b64encode(open(os.path.join('uploads','c.jpg'), 'rb').read()).decode('ascii')
         return render_template('dashboard.html', name=current_user.email, form=form, data=quote(image))
 
 
