@@ -93,7 +93,7 @@ class Policy(db.Model):
     sum_insured = db.Column(db.Numeric(10,2), nullable=False)
     interest_rate = db.Column(db.Numeric(10,2), nullable=False)
     premium = db.Column(db.Numeric(10,2), nullable=False)
-    coordinates = db.Column(db.String(200), nullable=False)
+    coordinates = db.Column(db.String(500), nullable=False)
     user_policy = db.Column(db.Integer, db.ForeignKey('user_policies.id'))
 
 
@@ -235,7 +235,7 @@ def dashboard():
         filename = secure_filename(form.image.data.filename)
         form.image.data.save('uploads/' + filename)
         userpolicy = UserPolicies(file_name=filename, status=0, user=current_user.id)
-        db.session.add(userpolicy)
+        
         values = process('uploads/' + filename)
         policy = Policy(policy_id=values['policy'],
                         start_dt=values['dates'][0],
@@ -245,7 +245,9 @@ def dashboard():
                         premium=values['premium'],
                         coordinates=quote(';'.join(values['coordinates'])),
                         user_policy = userpolicy.id)
+        userpolicy.policy_doc=policy
         db.session.add(policy)
+        db.session.add(userpolicy)
         db.session.commit()
         # return render_template('dashboard.html', name=current_user.email, data=open('uploads/' + filename, 'rb').read())
         return redirect(url_for('verifypolicy'))
