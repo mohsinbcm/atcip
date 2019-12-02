@@ -1,0 +1,345 @@
+{
+  "ApplicationName": "ATCIP",
+  "DisplayName": "ATCIP",
+  "Description": "Smart contract for farm insurance",
+  "ApplicationRoles": [
+    {
+      "Name": "admin",
+      "Description": "A person responding to a request"
+    },
+    {
+      "Name": "insurance_provider",
+      "Description": "A person sending a request."
+    },
+    {
+      "Name": "feeder",
+      "Description": "A person responding to a request"
+    },
+    {
+      "Name": "Viewer",
+      "Description": "A person responding to a request"
+    }
+  ],
+  "Workflows": [
+    {
+      "Name": "ATCIP",
+      "DisplayName": "Smart contract",
+      "Description": "Smart contract for farm insurance",
+      "Initiators": [ "admin" ],
+      "StartState": "Create",
+      "Properties": [
+        {
+          "Name": "State",
+          "DisplayName": "State",
+          "Description": "Holds the state of the contract.",
+          "Type": {
+            "Name": "state"
+          }
+        },
+        {
+          "Name": "policy_no",
+          "DisplayName": "Policy No",
+          "Description": "Policy No..",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "start_date",
+          "DisplayName": "Start Date",
+          "Description": "Start Date",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "end_date",
+          "DisplayName": "End Date",
+          "Description": "End Date",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "sum_insured",
+          "DisplayName": "Sum Insured",
+          "Description": "Sum Insured",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "interest",
+          "DisplayName": "Interest Rate",
+          "Description": "Interest Rate",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "premium",
+          "DisplayName": "Insurance Premium",
+          "Description": "Insurance Premium",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "coordinates",
+          "DisplayName": "Farm Coordinates",
+          "Description": "Farm Coordinates",
+          "Type": {
+            "Name": "string"
+          }
+        },
+        {
+          "Name": "coverage",
+          "DisplayName": "Claim Coverage",
+          "Description": "Claim Coverage",
+          "Type": {
+            "Name": "int"
+          }
+        },
+        {
+          "Name": "insurance_provider",
+          "DisplayName": "insurance provider",
+          "Description": "insurance provider",
+          "Type": {
+            "Name": "insurance_provider"
+          }
+        },
+        {
+          "Name": "admin",
+          "DisplayName": "tech provider",
+          "Description": "tech provider",
+          "Type": {
+            "Name": "admin"
+          }
+        },
+        {
+          "Name": "feeder",
+          "DisplayName": "oracle data feeder",
+          "Description": "oracle data feeder",
+          "Type": {
+            "Name": "feeder"
+          }
+        }
+      ],
+      "Constructor": {
+        "Parameters": [
+          {
+            "Name": "policyno",
+            "Description": "...",
+            "DisplayName": "Policy No",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "stdt",
+            "Description": "...",
+            "DisplayName": "Start Date",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "endt",
+            "Description": "...",
+            "DisplayName": "End Date",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "suminsured",
+            "Description": "...",
+            "DisplayName": "Sum Insured",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "intrst",
+            "Description": "...",
+            "DisplayName": "Interest Rate",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "prm",
+            "Description": "...",
+            "DisplayName": "Insurance Premium",
+            "Type": {
+              "Name": "string"
+            }
+          },
+          {
+            "Name": "coords",
+            "Description": "...",
+            "DisplayName": "Farm Coordinates",
+            "Type": {
+              "Name": "string"
+            }
+          }
+        ]
+      },
+      "Functions": [
+        {
+          "Name": "verifyPolicyDuration",
+          "DisplayName": "Verify Policy Duration",
+          "Description": "...",
+          "Parameters": [
+            {
+              "Name": "verificationData",
+              "Description": "...",
+              "DisplayName": "Verification Data",
+              "Type": {
+                "Name": "bool"
+              }
+            }
+          ]
+        },
+        {
+          "Name": "getWeatherData",
+          "DisplayName": "Get Weather Data",
+          "Description": "...",
+          "Parameters": [
+            {
+              "Name": "in_calamity",
+              "Description": "...",
+              "DisplayName": "Natural Calamity ",
+              "Type": {
+                "Name": "enum",
+                "EnumValues": ["None", "Drought", "Flood" ]
+              }
+            },
+            {
+              "Name": "coverge",
+              "Description": "...",
+              "DisplayName": "Claim coverage",
+              "Type": {
+                "Name": "int"
+              }
+            }
+          ]
+        },
+        {
+          "Name": "toInsuranceProvider",
+          "DisplayName": "Transfer Responsibility",
+          "Description": "...",
+          "Parameters": [
+            {
+              "Name": "ins_pro",
+              "Description": "...",
+              "DisplayName": "Party",
+              "Type": {
+                "Name": "insurance_provider"
+              }
+            },
+            {
+              "Name": "feedr",
+              "Description": "...",
+              "DisplayName": "Party",
+              "Type": {
+                "Name": "feeder"
+              }
+            }
+          ]
+        }
+      ],
+      "States": [
+        {
+          "Name": "Create",
+          "DisplayName": "Create",
+          "Description": "...",
+          "PercentComplete": 0,
+          "Value": 0,
+          "Style": "Success",
+          "Transitions": [
+            {
+              "AllowedRoles": [],
+              "AllowedInstanceRoles": ["admin"],
+              "Description": "...",
+              "Function": "toInsuranceProvider",
+              "NextStates": ["InsurenotVerified"],
+              "DisplayName": "Transfer Responsibility"
+            }
+          ]
+        },
+        {
+          "Name": "InsurenotVerified",
+          "DisplayName": "InsurenotVerified",
+          "Description": "...",
+          "PercentComplete": 50,
+          "Value": 1,
+          "Style": "Success",
+          "Transitions": [
+            {
+              "AllowedRoles": [],
+              "AllowedInstanceRoles": ["insurance_provider"],
+              "Description": "...",
+              "Function": "verifyPolicyDuration",
+              "NextStates": ["TermVoid","Insured"],
+              "DisplayName": "Transfer Responsibility"
+            },
+            {
+              "AllowedRoles": [],
+              "AllowedInstanceRoles": ["feeder"],
+              "Description": "...",
+              "Function": "getWeatherData",
+              "NextStates": [ "NoClaim","InsurenotVerified" ],
+              "DisplayName": "Send Request"
+            }
+          ]
+        },
+        {
+          "Name": "Insured",
+          "DisplayName": "Insured",
+          "Description": "...",
+          "PercentComplete": 50,
+          "Value": 1,
+          "Style": "Success",
+          "Transitions": [
+            {
+              "AllowedRoles": [],
+              "AllowedInstanceRoles": ["feeder"],
+              "Description": "...",
+              "Function": "getWeatherData",
+              "NextStates": [ "NoClaim", "ClaimInitiated" ],
+              "DisplayName": "Send Request"
+            }
+          ]
+        },
+        {
+          "Name": "ClaimInitiated",
+          "DisplayName": "Claim Initiated",
+          "Description": "...",
+          "PercentComplete": 100,
+          "Value": 2,
+          "Style": "Success",
+          "Transitions": []
+        },
+        {
+          "Name": "TermVoid",
+          "DisplayName": "Term Void",
+          "Description": "...",
+          "PercentComplete": 100,
+          "Value": 3,
+          "Style": "Failure",
+          "Transitions": []
+        },
+        {
+          "Name": "NoClaim",
+          "DisplayName": "No Claim",
+          "Description": "...",
+          "PercentComplete": 100,
+          "Value": 3,
+          "Style": "Failure",
+          "Transitions": []
+        }
+      ]
+    }
+  ]
+}

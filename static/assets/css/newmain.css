@@ -86,7 +86,7 @@ input:invalid:focus {
 body{
 		height: 100%;
 	}
-@media only screen and (max-device-width : 1024px)  {
+@media only screen and (min-device-width : 1024px)  {
 html{
 	height: 100%;
 }

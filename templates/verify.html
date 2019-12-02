@@ -1,0 +1,143 @@
+{% import "bootstrap/wtf.html" as wtf %}
+<!DOCTYPE html>
+<html style="height: auto !important;">
+<head>
+	<title>ATCIP: hackathon</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="/static/assets/css/newmain.css">
+	<link rel="stylesheet" href="/static/assets/css/circle.css">
+	<noscript><link rel="stylesheet" href="/static/assets/css/noscript.css" /></noscript>
+	<!-- Custom styles for this template -->
+</head>
+<body>
+	<nav class="navbar navbar-expand">
+		<div class="container-fluid">
+			<a class="font-weight-bold navbar-brand text-light" href="/dashboard">ATCIP</a>
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="/logout" class="btn btn-danger"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+			</ul>
+		</div>
+	</nav>
+	<div class="container text-center">
+		<div id="wrapper">
+			<header id="header" class="alt">
+				<span class="logo"><img src="/static/assets/images/logo.svg" alt="ATCIP"></span>
+				<h1>ATCIP</h1>
+				<p>
+					Automated and Timely Contract Insurance Payout</br>
+					<small>Developed for <i>ICERTIS AI/ML & Blockchain hackathon</i> by Techgig</small>
+				</p>
+			</header>
+			<div class="text-center">
+				<div class="next">
+					<p class="mb-3 font-weight-lighter">Welcome, {{name}}</p>
+				</div>	
+			</div>
+			<div class="m-4">
+				<div class="row">
+					<div class="m-auto">
+						<div class="c100 p{{userpolicy.status*25 if userpolicy.status <=4 else 100}} {%if status_color%}{{status_color}}{%endif%}">
+							<span>{{userpolicy.status*25 if userpolicy.status <=4 else 100}}%</span>
+						<div class="slice">
+							<div class="bar"></div>
+							<div class="fill"></div>
+						</div>
+						</div>
+					</div>
+				</div>
+				{%if userpolicy.status==0%}
+				<span class="p-1 font-weight-bold bg-white text-muted">Not verified</span>
+				{%elif userpolicy.status==1%}
+				<span class="p-1 font-weight-bold bg-white text-primary">Verified</span>
+				{%elif userpolicy.status==2%}
+				<span class="p-1 font-weight-bold bg-white text-primary">Contract Created</span>
+				{%elif userpolicy.status==3%}
+				<span class="p-1 font-weight-bold bg-white text-warning">Insured</span>
+				{%elif userpolicy.status==4%}
+				<span class="p-1 font-weight-bold bg-white text-success">Claim Settelment Initiated</span>
+				{%elif userpolicy.status==5%}
+				<span class="p-1 font-weight-bold bg-white text-danger">Insurance terms Void</span>
+				{%endif%}
+				<div class="clearfix"></div>
+			</div>
+			{%if userpolicy.status==0%}
+			<form class="text-left" method="POST" action="/verifypolicy">
+				{{form.hidden_tag()}}
+				<div class="form-group">
+					<label for="policy">Policy Id</label>
+					<input type="text" name="policy_id" id="policy" class="form-control" value="{{policy.policy_id}}"/>
+				</div>
+				<div class="form-group">
+					<label for="startdate">Start Date</label>
+					<input type="text" name="start_dt" id="startdate" class="form-control" value="{{policy.start_dt}}"/>
+				</div>
+				<div class="form-group">
+					<label for="enddate">End Date</label>
+					<input type="text" name="end_dt" id="enddate" class="form-control" value="{{policy.end_dt}}"/>
+				</div>
+				<div class="form-group">
+						<label for="suminsured">Sum Insured</label>
+					<input type="text" name="sum_insured" id="suminsured" class="form-control" value="{{policy.sum_insured}}"/>
+				</div>
+				<div class="form-group">
+					<label for="interest">Interest rate</label>
+					<input type="text" name="interest_rate" id="interest" class="form-control" value="{{policy.interest_rate}}"/>
+				</div>
+				<div class="form-group">
+					<label for="premium">Premium</label>
+					<input type="text" name="premium" id="premium" class="form-control" value="{{policy.premium}}"/>
+				</div>
+				<div class="form-group">
+					<label for="coordinates">Coordinates</label>
+					<textarea name="coordinates" id="coordinates" class="form-control" rows="6">{{coordinates}}</textarea>
+				</div>
+				<div class="form-group">
+					<input type="hidden" name="userpolicyid" class="form-control" value="{{userpolicy.id}}" />
+				</div>
+				<button type="submit" class="btn btn-primary">
+					<!--No glyphicons in Bootstrap 4. Insert icon of choice here-->
+					<span class="">Verify</span>
+				</button>
+			</form>
+			{%else%}
+			<div class="text-left">
+				<div class="form-group">
+					<label for="policy">Policy Id</label>
+					<input type="text" name="policy" id="policy" disabled class="form-control" value="{{policy.policy_id}}"/>
+				</div>
+				<div class="form-group">
+					<label for="startdate">Start Date</label>
+					<input type="text" name="startdate" id="startdate" disabled  class="form-control" value="{{policy.start_dt}}"/>
+				</div>
+				<div class="form-group">
+					<label for="enddate">End Date</label>
+					<input type="text" name="enddate" id="enddate"  disabled class="form-control" value="{{policy.end_dt}}"/>
+				</div>
+				<div class="form-group">
+						<label for="suminsured">Sum Insured</label>
+					<input type="text" name="suminsured" id="suminsured" disabled  class="form-control" value="{{policy.sum_insured}}"/>
+				</div>
+				<div class="form-group">
+					<label for="interest">Interest rate</label>
+					<input type="text" name="interest" id="interest" disabled  class="form-control" value="{{policy.interest_rate}}"/>
+				</div>
+				<div class="form-group">
+					<label for="premium">Premium</label>
+					<input type="text" name="premium" id="premium" disabled  class="form-control" value="{{policy.premium}}"/>
+				</div>
+				<div class="form-group">
+					<label for="coordinates">Coordinates</label>
+					<textarea name="coordinates" id="coordinates" disabled  class="form-control" rows="6">{{coordinates}}</textarea>
+				</div>
+				<div class="form-group">
+					<input type="hidden" name="userpolicyid" class="form-control" value="{{userpolicy.id}}" />
+				</div>
+			</div>	
+			{%endif%}
+			<p class="mt-5 mb-3 text-muted">&copy; Team_Geek, 2019-2020</p>
+		</div>
+	</div>
+</body>
+</html>

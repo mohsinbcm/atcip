@@ -1,5 +1,7 @@
 
+import os
 from flask import Flask, render_template, redirect, url_for
+from flask import send_from_directory
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
@@ -12,14 +14,19 @@ from werkzeug import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from sqlalchemy import func
-from urllib.parse import quote, quote_plus
+from urllib.parse import quote, quote_plus, unquote
 from base64 import b64encode
-import os
-
+from visionapi import process
+from datetime import datetime
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+# logg = logging.getLogger()
 params = quote_plus("DRIVER={ODBC Driver 17 for SQL Server};SERVER=db-5zlghd-stc.database.windows.net;DATABASE=atcip-web-db;UID=dbadmin;PWD=Atcip@112019;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect={}".format(params)
+# app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.sqllite"
 s = URLSafeTimedSerializer('Thisisasecret!')
 
 bootstrap = Bootstrap(app)
@@ -28,7 +35,7 @@ bootstrap = Bootstrap(app)
 app.config.update(dict(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_USERNAME='mohsin.bcm.amu@gmail.com',
-    MAIL_PASSWORD='gjfzrmdjjzoqwwwm',
+    MAIL_PASSWORD='aoiiifgpcqnemain',
     MAIL_PORT=465,
     MAIL_USE_SSL=True
 ))
@@ -68,6 +75,28 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(80))
     verified = db.Column(db.Boolean(), default=False)
     verified_on = db.Column(db.DateTime)
+    policy = db.relationship('UserPolicies', backref='policy')
+
+
+class UserPolicies(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.Integer, nullable=False, default=0)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    policy_doc = db.relationship('Policy', backref="policydetails" , uselist=False)
+
+class Policy(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    policy_id = db.Column(db.String(50), nullable=False)
+    start_dt = db.Column(db.DateTime, nullable=False)
+    end_dt = db.Column(db.DateTime, nullable=False)
+    sum_insured = db.Column(db.Numeric(10,2), nullable=False)
+    interest_rate = db.Column(db.Numeric(10,2), nullable=False)
+    premium = db.Column(db.Numeric(10,2), nullable=False)
+    coordinates = db.Column(db.String(200), nullable=False)
+    user_policy = db.Column(db.Integer, db.ForeignKey('user_policies.id'))
+
+
 
 
 @login_manager.user_loader
@@ -89,6 +118,16 @@ class RegisterForm(FlaskForm):
                                                          Length(min=8, max=80),
                                                          EqualTo('password', message='Passwords must match')])
 
+
+class PolicyForm(FlaskForm):
+    policy_id=StringField('policy', validators=[InputRequired()])
+    start_dt=StringField('startdate', validators=[InputRequired()])
+    end_dt=StringField('enddate', validators=[InputRequired()])
+    sum_insured=StringField('suminsured', validators=[InputRequired()])
+    interest_rate=StringField('interest', validators=[InputRequired()])
+    premium=StringField('premium', validators=[InputRequired()])
+    coordinates=StringField('coordinates', validators=[InputRequired()])
+    userpolicyid=StringField('userpolicyid', validators=[InputRequired()])
 
 class ReverifyForm(FlaskForm):
     email = StringField('email', validators=[InputRequired()])
@@ -192,13 +231,71 @@ def confirm_email(token):
 def dashboard():
     form = DashboardForm()
     if form.validate_on_submit():
+        # try:
         filename = secure_filename(form.image.data.filename)
         form.image.data.save('uploads/' + filename)
-        return render_template('dashboard.html', name=current_user.email, data=open('uploads/' + filename, 'rb').read())
+        userpolicy = UserPolicies(file_name=filename, status=0, user=current_user.id)
+        db.session.add(userpolicy)
+        values = process('uploads/' + filename)
+        policy = Policy(policy_id=values['policy'],
+                        start_dt=values['dates'][0],
+                        end_dt=values['dates'][1],
+                        sum_insured=values['sum_insured'],
+                        interest_rate=values['interest'],
+                        premium=values['premium'],
+                        coordinates=quote(';'.join(values['coordinates'])),
+                        user_policy = userpolicy.id)
+        db.session.add(policy)
+        db.session.commit()
+        # return render_template('dashboard.html', name=current_user.email, data=open('uploads/' + filename, 'rb').read())
+        return redirect(url_for('verifypolicy'))
+        # except:
+        #     form.image.errors = ['Failed to upload files']
+        #     return render_template('dashboard.html', name=current_user.email, form=form)
     else:
-        image = b64encode(open(os.path.join('uploads','c.jpg'), 'rb').read()).decode('ascii')
-        return render_template('dashboard.html', name=current_user.email, form=form, data=quote(image))
+        userpolicy = UserPolicies.query.filter_by(user=current_user.id).first()
+        if userpolicy:
+            return redirect(url_for('verifypolicy'))
+        return render_template('dashboard.html', name=current_user.email, form=form)
 
+@app.route("/verifypolicy", methods=['GET', 'POST'])
+@login_required
+def verifypolicy():
+    form=PolicyForm()
+    if form.validate_on_submit():
+        userpolicy = UserPolicies.query.filter_by(id=form.userpolicyid.data).first()
+        policy = Policy.query.filter_by(user_policy=form.userpolicyid.data).first()
+        policy.policy_id = form.policy_id.data
+        policy.start_date = datetime.strptime(form.start_dt.data,'%Y-%m-%d %H:%M:%S')
+        policy.end_date = datetime.strptime(form.end_dt.data,'%Y-%m-%d %H:%M:%S')
+        policy.sum_insured = float(form.sum_insured.data)
+        policy.interest = float(form.interest_rate.data)
+        policy.premium = float(form.premium.data)
+        policy.coordinates = quote(';'.join([x.strip('\r') for x in form.coordinates.data.split('\n')]))
+        userpolicy.status = 1
+        db.session.commit()
+    #     pass
+    # else:
+    userpolicy = UserPolicies.query.filter_by(user=current_user.id).first()
+    policy = Policy.query.filter_by(user_policy=userpolicy.id).first()
+    coordinates = '\n'.join([x for x in (unquote(policy.coordinates)).split(';')])
+    status = userpolicy.status
+    color= None if status<=2 else ('orange' if status==3 else ('green' if status==4 else 'red'))
+    return render_template('verify.html', name=current_user.email, userpolicy=userpolicy, form=form,
+                            policy=policy, coordinates=coordinates, status_color=color)
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == "__main__":
     app.debug = True
