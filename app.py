@@ -1,4 +1,5 @@
 
+import base64
 import os
 from flask import Flask, render_template, redirect, url_for
 from flask import send_from_directory
@@ -18,6 +19,7 @@ from urllib.parse import quote, quote_plus, unquote
 from base64 import b64encode
 from visionapi import process
 from datetime import datetime
+from api import createAndTransfer, getStatus
 import logging
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
@@ -46,8 +48,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'index'
-
-import base64
 
 
 def str_encode(key, clear):
@@ -83,20 +83,22 @@ class UserPolicies(db.Model):
     file_name = db.Column(db.String(50), nullable=False)
     status = db.Column(db.Integer, nullable=False, default=0)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    policy_doc = db.relationship('Policy', backref="policydetails" , uselist=False)
+    contractId = db.Column(db.Integer, nullable=True)
+    claim = db.Column(db.Integer, nullable=True)
+    policy_doc = db.relationship(
+        'Policy', backref="policydetails", uselist=False)
+
 
 class Policy(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     policy_id = db.Column(db.String(50), nullable=False)
     start_dt = db.Column(db.DateTime, nullable=False)
     end_dt = db.Column(db.DateTime, nullable=False)
-    sum_insured = db.Column(db.Numeric(10,2), nullable=False)
-    interest_rate = db.Column(db.Numeric(10,2), nullable=False)
-    premium = db.Column(db.Numeric(10,2), nullable=False)
+    sum_insured = db.Column(db.Numeric(10, 2), nullable=False)
+    interest_rate = db.Column(db.Numeric(10, 2), nullable=False)
+    premium = db.Column(db.Numeric(10, 2), nullable=False)
     coordinates = db.Column(db.String(500), nullable=False)
     user_policy = db.Column(db.Integer, db.ForeignKey('user_policies.id'))
-
-
 
 
 @login_manager.user_loader
@@ -105,29 +107,33 @@ def load_user(user_id):
 
 
 class LoginForm(FlaskForm):
-    email = StringField('email', validators=[InputRequired(), Length(min=15, max=50)])
-    password = PasswordField('password', validators=[InputRequired(), Length(min=8, max=80)])
+    email = StringField('email', validators=[
+                        InputRequired(), Length(min=15, max=50)])
+    password = PasswordField('password', validators=[
+                             InputRequired(), Length(min=8, max=80)])
     remember = BooleanField('remember-me')
 
 
 class RegisterForm(FlaskForm):
     email = StringField('inputEmail', validators=[InputRequired('Email is required'),
                                                   Email(message='Invalid email'), Length(max=50)])
-    password = PasswordField('inputPassword', validators=[InputRequired('Password is required'), Length(min=8, max=80)])
+    password = PasswordField('inputPassword', validators=[
+                             InputRequired('Password is required'), Length(min=8, max=80)])
     confirm = StringField('confirmPassword', validators=[InputRequired('Please confirm password'),
                                                          Length(min=8, max=80),
                                                          EqualTo('password', message='Passwords must match')])
 
 
 class PolicyForm(FlaskForm):
-    policy_id=StringField('policy', validators=[InputRequired()])
-    start_dt=StringField('startdate', validators=[InputRequired()])
-    end_dt=StringField('enddate', validators=[InputRequired()])
-    sum_insured=StringField('suminsured', validators=[InputRequired()])
-    interest_rate=StringField('interest', validators=[InputRequired()])
-    premium=StringField('premium', validators=[InputRequired()])
-    coordinates=StringField('coordinates', validators=[InputRequired()])
-    userpolicyid=StringField('userpolicyid', validators=[InputRequired()])
+    policy_id = StringField('policy', validators=[InputRequired()])
+    start_dt = StringField('startdate', validators=[InputRequired()])
+    end_dt = StringField('enddate', validators=[InputRequired()])
+    sum_insured = StringField('suminsured', validators=[InputRequired()])
+    interest_rate = StringField('interest', validators=[InputRequired()])
+    premium = StringField('premium', validators=[InputRequired()])
+    coordinates = StringField('coordinates', validators=[InputRequired()])
+    userpolicyid = StringField('userpolicyid', validators=[InputRequired()])
+
 
 class ReverifyForm(FlaskForm):
     email = StringField('email', validators=[InputRequired()])
@@ -160,14 +166,17 @@ def index():
 def signup():
     form = RegisterForm()
     if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data, method='sha256')
+        hashed_password = generate_password_hash(
+            form.password.data, method='sha256')
         new_user = User(email=form.email.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         token = s.dumps(form.email.data, salt='email-confirm')
         link = url_for('confirm_email', token=token, _external=True)
-        msg = Message('Confirm Email', sender='atcip@gmail.com', recipients=[form.email.data])
-        msg.html = '<html><body>Kindly click <a href="{0}">here</a> to verify.</body</html>'.format(link)
+        msg = Message('Confirm Email', sender='atcip@gmail.com',
+                      recipients=[form.email.data])
+        msg.html = '<html><body>Kindly click <a href="{0}">here</a> to verify.</body</html>'.format(
+            link)
         mail.send(msg)
         return redirect(url_for('verify', email=str_encode(app.config['SECRET_KEY'], form.email.data)))
     return render_template("signup.html", form=form)
@@ -189,8 +198,10 @@ def confirm_email(token):
         if user:
             token2 = s.dumps(email, salt='email-confirm')
             link = url_for('confirm_email', token=token2, _external=True)
-            msg = Message('Confirm Email', sender='atcip@gmail.com', recipients=[email])
-            msg.html = '<html><body>Kindly click <a href="{0}">here</a> to verify.</body</html>'.format(link)
+            msg = Message('Confirm Email',
+                          sender='atcip@gmail.com', recipients=[email])
+            msg.html = '<html><body>Kindly click <a href="{0}">here</a> to verify.</body</html>'.format(
+                link)
             mail.send(msg)
             return redirect(url_for('verify', email=str_encode(app.config['SECRET_KEY'], email)))
         else:
@@ -234,8 +245,9 @@ def dashboard():
         # try:
         filename = secure_filename(form.image.data.filename)
         form.image.data.save('uploads/' + filename)
-        userpolicy = UserPolicies(file_name=filename, status=0, user=current_user.id)
-        
+        userpolicy = UserPolicies(
+            file_name=filename, status=0, user=current_user.id)
+
         values = process('uploads/' + filename)
         policy = Policy(policy_id=values['policy'],
                         start_dt=values['dates'][0],
@@ -244,8 +256,8 @@ def dashboard():
                         interest_rate=values['interest'],
                         premium=values['premium'],
                         coordinates=quote(';'.join(values['coordinates'])),
-                        user_policy = userpolicy.id)
-        userpolicy.policy_doc=policy
+                        user_policy=userpolicy.id)
+        userpolicy.policy_doc = policy
         db.session.add(policy)
         db.session.add(userpolicy)
         db.session.commit()
@@ -260,31 +272,56 @@ def dashboard():
             return redirect(url_for('verifypolicy'))
         return render_template('dashboard.html', name=current_user.email, form=form)
 
+
 @app.route("/verifypolicy", methods=['GET', 'POST'])
 @login_required
 def verifypolicy():
-    form=PolicyForm()
+    form = PolicyForm()
     if form.validate_on_submit():
-        userpolicy = UserPolicies.query.filter_by(id=form.userpolicyid.data).first()
-        policy = Policy.query.filter_by(user_policy=form.userpolicyid.data).first()
+        userpolicy = UserPolicies.query.filter_by(
+            id=form.userpolicyid.data).first()
+        policy = Policy.query.filter_by(
+            user_policy=form.userpolicyid.data).first()
         policy.policy_id = form.policy_id.data
-        policy.start_date = datetime.strptime(form.start_dt.data,'%Y-%m-%d %H:%M:%S')
-        policy.end_date = datetime.strptime(form.end_dt.data,'%Y-%m-%d %H:%M:%S')
+        policy.start_date = datetime.strptime(
+            form.start_dt.data, '%Y-%m-%d %H:%M:%S')
+        policy.end_date = datetime.strptime(
+            form.end_dt.data, '%Y-%m-%d %H:%M:%S')
         policy.sum_insured = float(form.sum_insured.data)
         policy.interest = float(form.interest_rate.data)
         policy.premium = float(form.premium.data)
-        policy.coordinates = quote(';'.join([x.strip('\r') for x in form.coordinates.data.split('\n')]))
+        policy.coordinates = quote(
+            ';'.join([x.strip('\r') for x in form.coordinates.data.split('\n')]))
         userpolicy.status = 1
         db.session.commit()
+        return redirect(url_for('verifypolicy'))
     #     pass
     # else:
     userpolicy = UserPolicies.query.filter_by(user=current_user.id).first()
-    policy = Policy.query.filter_by(user_policy=userpolicy.id).first()
-    coordinates = '\n'.join([x for x in (unquote(policy.coordinates)).split(';')])
+    policy = userpolicy.policy_doc
+    claim = None
+    if userpolicy.status > 0:
+        if not userpolicy.contractId:
+            contractId = createAndTransfer(policy.policy_id, policy.start_dt, policy.end_dt,
+                                        policy.sum_insured, policy.interest_rate, policy.premium, policy.coordinates)
+            userpolicy.contractId = contractId[0]   
+            db.session.commit()
+        cstatus = getStatus(userpolicy.contractId)
+        if isinstance(cstatus, tuple):
+            claim = cstatus[1]
+            cstatus = cstatus[0]
+        if (userpolicy.status - 1) != cstatus:
+            userpolicy.status = cstatus+1
+            if cstatus == 3:
+                userpolicy.claim = claim
+            db.session.commit()
+    coordinates = '\n'.join(
+        [x for x in (unquote(policy.coordinates)).split(';')])
     status = userpolicy.status
-    color= None if status<=2 else ('orange' if status==3 else ('green' if status==4 else 'red'))
+    color = None if status <= 2 else (
+        'orange' if status == 3 else ('green' if status == 4 else 'red'))
     return render_template('verify.html', name=current_user.email, userpolicy=userpolicy, form=form,
-                            policy=policy, coordinates=coordinates, status_color=color)
+                           policy=policy, coordinates=coordinates, status_color=color, claim=claim)
 
 
 @app.route("/logout")
@@ -298,6 +335,7 @@ def logout():
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 if __name__ == "__main__":
     app.debug = True

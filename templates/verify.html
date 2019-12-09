@@ -56,9 +56,11 @@
 				{%elif userpolicy.status==3%}
 				<span class="p-1 font-weight-bold bg-white text-warning">Insured</span>
 				{%elif userpolicy.status==4%}
-				<span class="p-1 font-weight-bold bg-white text-success">Claim Settelment Initiated</span>
+				<span class="p-1 font-weight-bold bg-white text-success">Claim Settelment Initiated for {{claim}}% payment</span>
 				{%elif userpolicy.status==5%}
 				<span class="p-1 font-weight-bold bg-white text-danger">Insurance terms Void</span>
+				{%elif userpolicy.status==6%}
+				<span class="p-1 font-weight-bold bg-white text-info">No Claim</span>
 				{%endif%}
 				<div class="clearfix"></div>
 			</div>
